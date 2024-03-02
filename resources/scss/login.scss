@@ -1,0 +1,27 @@
+@import "./resources/scss/settings.scss";
+
+*{
+    //border: solid 1px
+}
+
+html,
+body,
+#login-app {
+    height: 100%;
+}
+
+#login-app {
+    background-image: url('/resources/image/login_bg.jpg');
+    background-size: 100% 100%; /* 寬度100%，高度自動調整以保持原始比例 */
+    background-repeat: no-repeat; /* 避免背景圖片重複 */
+}
+
+.login-card {
+    opacity: 0.5; /* 初始透明度設置為0.5 */
+    transition: opacity 0.5s ease; /* 添加透明度過渡效果，持續時間0.5秒 */
+}
+
+.login-card:hover {
+    opacity: 1; /* 初始透明度設置為0.5 */
+}
+

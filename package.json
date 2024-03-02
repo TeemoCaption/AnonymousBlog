@@ -1,0 +1,30 @@
+{
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "serve": "php artisan serve",
+        "dev": "vite",
+        "start": "concurrently \"npm run serve\" \"npm run dev\""
+    },
+    "devDependencies": {
+        "@popperjs/core": "^2.11.6",
+        "@vitejs/plugin-vue": "^4.6.2",
+        "axios": "^1.6.7",
+        "bootstrap": "^5.2.3",
+        "concurrently": "^8.2.2",
+        "laravel-mix": "^6.0.49",
+        "laravel-vite-plugin": "^1.0.0",
+        "sass": "^1.71.1",
+        "sass-loader": "^14.1.1",
+        "vite": "^5.1.4",
+        "vite-plugin-vuetify": "^2.0.2",
+        "vue": "^3.4.21",
+        "vue-cli-plugin-vuetify": "~2.5.8"
+    },
+    "dependencies": {
+        "@mdi/font": "^7.4.47",
+        "vue-loader": "^17.3.1",
+        "vue-router": "^4.0.13",
+        "vuetify": "^3.5.7"
+    }
+}
