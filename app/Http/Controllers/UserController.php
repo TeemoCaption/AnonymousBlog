@@ -51,7 +51,7 @@ class UserController extends Controller
             $user->save();
 
             // 選用：在這裡新增額外的邏輯，例如重定向到登入頁面或顯示確認訊息
-            return redirect()->route('login');
+            return redirect()->route('verifysuccess');
         }
 
         // 如果驗證失敗，顯示錯誤訊息或重定向
