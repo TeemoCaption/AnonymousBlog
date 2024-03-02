@@ -14,6 +14,9 @@ Route::get('/register', function () {
     return view('register');
 });
 
+// 會員登入
+Route::post('/loginverify', [UserController::class, 'loginVerify']);
+
 // 註冊會員
 Route::post('/register/save', [UserController::class, 'register']);
 

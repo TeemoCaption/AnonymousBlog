@@ -10,7 +10,7 @@
 
 <body>
     <div id="login-app">
-
+        
     </div>
     @vite('resources/js/login.js')
 </body>
