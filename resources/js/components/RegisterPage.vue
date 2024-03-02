@@ -2,6 +2,9 @@
     <v-container class="fill-height" fluid>
         <v-row class="fill-height" align="center" justify="center">
             <v-col cols="12" sm="8" md="4">
+                <!-- 在v-card上方添加的進度條 -->
+                <v-progress-linear v-if="loading" :indeterminate="true" color="white"></v-progress-linear>
+
                 <v-card class="elevation-12 register-card">
                     <v-toolbar color="primary" dark>
                         <v-toolbar-title>註冊頁</v-toolbar-title>
@@ -17,6 +20,7 @@
                                 :rules="passwordRules" autocomplete="current-password"></v-text-field>
                             <v-card-actions>
                                 <v-spacer></v-spacer>
+                                <v-btn color="primary" @click="goBack">回上一頁</v-btn>
                                 <v-btn color="primary" type="submit">註冊</v-btn>
                             </v-card-actions>
                         </v-form>
@@ -28,11 +32,11 @@
 </template>
 
 <script>
-import axios from 'axios';  // 引入axios
-
 export default {
     data: () => {
         return {
+            loading: true, // 初始時設定為 true，讓進度條在頁面加載時顯示
+
             email: '',
             username: '',
             password: '',
@@ -68,8 +72,17 @@ export default {
                 value => (value ? /[a-zA-Z]/.test(value) && /\d/.test(value) : false) || '密碼必須包含英文和數字',
             ]
         }
+    }, 
+    mounted() {   // 生命鉤子
+        // 假設頁面加載需要一些時間，這裡使用 setTimeout 模擬網頁加載過程
+        setTimeout(() => {
+            this.loading = false; // 模擬加載完成，隱藏進度條
+        }, 1500); // 假設加載過程需要 1.5 秒
     },
     methods: {
+        goBack() {
+            window.history.back();
+        },
         submitForm() {
             console.log('submitForm is called');
             // 從 meta 標籤獲取 CSRF 令牌
