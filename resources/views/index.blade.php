@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Laravel</title>
+    <title>匿名交友</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -15,7 +15,7 @@
 </head>
 
 <body>
-    <div id="app">
+    <div id="index-app">
 
     </div>
     @vite('resources/js/app.js')

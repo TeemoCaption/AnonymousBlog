@@ -10,6 +10,11 @@
                         <v-toolbar-title>登入頁</v-toolbar-title>
                     </v-toolbar>
                     <v-card-text>
+                        <!-- 登入錯誤時顯示的提示 -->
+                        <v-alert v-if="loginError" type="error" dismissible>
+                            {{ errorMessage }}
+                        </v-alert>
+
                         <v-form @submit.prevent="submitForm">
                             <v-text-field v-model="username" class="centered-field" label="用戶名" type="text"
                                 autocomplete="username"></v-text-field>
@@ -34,13 +39,18 @@
 </template>
 
 <script>
+import $ from 'jquery';
+
 export default {
     data: () => {
         return {
             loading: true, // 初始時設定為 true，讓進度條在頁面加載時顯示
-        
+
             username: '',
             password: '',
+
+            loginError: false, // 控制登入錯誤提示的顯示
+            errorMessage: '', // 錯誤訊息內容
         }
     },
     mounted() {
@@ -56,29 +66,44 @@ export default {
         },
         submitForm() {
             console.log('submitForm is called');
-            // 從 meta 標籤獲取 CSRF 令牌
-            const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-            $.ajax({
-                url: '/loginverify', // 請求的 URL
-                method: 'POST', // 請求方法
-                contentType: 'application/json', // 發送信息至服務器時內容編碼類型
-                headers: {
-                    'X-CSRF-TOKEN': token, // 在請求標頭中設定 CSRF 令牌
-                },
-                data: JSON.stringify({ // 將數據轉換為 JSON 字符串
-                    username: this.username,
-                    password: this.password,
-                }),
-                success: function (data) { // 請求成功後的回調函數
-                    console.log(data);
-                    // 重定向到首頁
-                    window.location.href = '/';
-                },
-                error: function (xhr, status, error) { // 請求失敗後的回調函數
-                    console.error('請求失敗：', error);
-                }
-            });
+            // 檢查是否已輸入用戶名和密碼
+            if (!this.username || !this.password) {
+                this.loginError = true; // 顯示錯誤訊息
+                this.errorMessage = '帳號或密碼欄位未輸入'; // 設定錯誤訊息
+                return; // 提前退出函數
+            }
+            // 從 meta 標籤取得 CSRF 令牌
+            const tokenElement = document.querySelector('meta[name="csrf-token"]');
+
+            if (tokenElement) {
+                const token = tokenElement.getAttribute('content');
+                // 使用 jQuery 發送 AJAX 請求
+                $.ajax({
+                    url: '/loginverify', // 請求的 URL
+                    method: 'POST', // 請求方法
+                    contentType: 'application/json', // 傳送訊息至伺服器時內容編碼類型
+                    headers: {
+                        'X-CSRF-TOKEN': token, // 在請求頭中設定 CSRF 令牌
+                    },
+                    data: JSON.stringify({ // 將資料轉換為 JSON 字串
+                        username: this.username,
+                        password: this.password,
+                    }),
+                    success: (data) => { // 請求成功後的回呼函數
+                        console.log(data);
+                        // 重定向到首頁
+                        window.location.href = '/';
+                    },
+                    error: (xhr, status, error) => { // 請求失敗後的回呼函數
+                        this.loginError = true; // 登入失敗，設定 loginError 為 true 以顯示錯誤訊息
+                        this.errorMessage = '登入失敗，請檢查輸入或稍後重試'; // 設定錯誤訊息
+                    }
+                });
+            } else {
+                this.errorMessage = 'CSRF token meta tag not found.'; // 設定錯誤訊息
+                this.loginError = true; // 顯示錯誤提示
+            }
         },
         resetPassword() {
             // 設定要跳轉到的忘記密碼頁面網址

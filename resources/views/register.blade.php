@@ -7,8 +7,6 @@
 
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>匿名交友</title>
-
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     @vite('resources/css/app.css')
 </head>
 

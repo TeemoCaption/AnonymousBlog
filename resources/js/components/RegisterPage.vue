@@ -10,6 +10,13 @@
                         <v-toolbar-title>註冊頁</v-toolbar-title>
                     </v-toolbar>
                     <v-card-text>
+                        <!-- 登入錯誤時顯示的提示 -->
+                        <v-alert v-if="loginError" type="error" dismissible>
+                            <ul class="error-list">
+                                <li v-for="(msg, index) in errorMessages" :key="index">{{ msg }}</li>
+                            </ul>
+                        </v-alert>
+
                         <!-- 為v-form添加submit事件處理器 -->
                         <v-form @submit.prevent="submitForm">
                             <v-text-field v-model="email" class="centered-field" label="信箱" type="email"
@@ -32,6 +39,8 @@
 </template>
 
 <script>
+import $ from 'jquery';
+
 export default {
     data: () => {
         return {
@@ -40,6 +49,9 @@ export default {
             email: '',
             username: '',
             password: '',
+
+            loginError: false, // 控制登入錯誤提示的顯示
+            errorMessages: [], // 多个錯誤訊息內容的數組
 
             emailRules: [
                 // 第一條規則：檢查輸入值是否存在。如果用戶沒有輸入任何內容（即輸入值為空），
@@ -72,7 +84,7 @@ export default {
                 value => (value ? /[a-zA-Z]/.test(value) && /\d/.test(value) : false) || '密碼必須包含英文和數字',
             ]
         }
-    }, 
+    },
     mounted() {   // 生命鉤子
         // 假設頁面加載需要一些時間，這裡使用 setTimeout 模擬網頁加載過程
         setTimeout(() => {
@@ -81,34 +93,76 @@ export default {
     },
     methods: {
         goBack() {
-            window.history.back();
+            window.location.href = '/login';
         },
         submitForm() {
             console.log('submitForm is called');
-            // 從 meta 標籤獲取 CSRF 令牌
-            const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            this.errorMessages = []; // 清空之前的錯誤訊息
 
-            $.ajax({
-                url: '/register/save', // 請求的 URL
-                method: 'POST', // 請求方法
-                contentType: 'application/json', // 發送信息至服務器時內容編碼類型
-                headers: {
-                    'X-CSRF-TOKEN': token, // 在請求標頭中設定 CSRF 令牌
-                },
-                data: JSON.stringify({ // 將數據轉換為 JSON 字符串
-                    email: this.email,
-                    username: this.username,
-                    password: this.password,
-                }),
-                success: function (data) { // 請求成功後的回調函數
-                    console.log(data);
-                    // 重定向到 /login 頁面
-                    window.location.href = '/login';
-                },
-                error: function (xhr, status, error) { // 請求失敗後的回調函數
-                    console.error('請求失敗：', error);
-                }
-            });
+            // 檢查是否已輸入信箱、使用者名稱和密碼
+            if (!this.email) {
+                this.errorMessages.push('信箱是必填的');
+            }
+            if (!this.username) {
+                this.errorMessages.push('使用者名稱是必填的');
+            }
+            if (!this.password) {
+                this.errorMessages.push('密碼是必填的');
+            }
+
+            // 如果存在錯誤訊息，則設定 loginError 為 true 並提前退出函數
+            if (this.errorMessages.length > 0) {
+                this.loginError = true;
+                return; // 提前退出函數
+            }
+
+            // 從 meta 標籤取得 CSRF 令牌
+            const tokenElement = document.querySelector('meta[name="csrf-token"]');
+
+            if (tokenElement) {
+                const token = tokenElement.getAttribute('content');
+                // 使用 jQuery 發送 AJAX 請求
+                $.ajax({
+                    url: '/register/save', // 請求的 URL
+                    method: 'POST', // 請求方法
+                    contentType: 'application/json', // 發送信息至服務器時內容編碼類型
+                    headers: {
+                        'X-CSRF-TOKEN': token, // 在請求標頭中設定 CSRF 令牌
+                    },
+                    data: JSON.stringify({ // 將數據轉換為 JSON 字符串
+                        email: this.email,
+                        username: this.username,
+                        password: this.password,
+                    }),
+                    success: function (data) { // 請求成功後的回調函數
+                        //console.log(data);
+                        // 重定向到 /login 頁面
+                        window.location.href = '/login';
+                    },
+                    error: (xhr, status, error) => {
+                        this.loginError = true; // 登入失敗，設定 loginError 為 true 以顯示錯誤訊息
+
+                        if (xhr.responseJSON && xhr.responseJSON.error) {
+                            Object.values(xhr.responseJSON.error).forEach((errorContent) => {
+                                if (Array.isArray(errorContent)) {
+                                    errorContent.forEach((msg) => {
+                                        this.errorMessages.push(msg);
+                                    });
+                                } else {
+                                    this.errorMessages.push(errorContent);
+                                }
+                            });
+                        }
+
+                        if (this.errorMessages.length === 0) {
+                            this.errorMessages.push('註冊失敗，請稍後重試');
+                        }
+                    }
+                });
+            } else {
+                this.errorMessage = 'CSRF token meta tag not found.'; // 設定錯誤訊息
+                this.loginError = true; // 顯示錯誤提示
+            }
         }
     }
 }
