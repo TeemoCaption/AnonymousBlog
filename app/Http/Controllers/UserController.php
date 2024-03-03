@@ -18,6 +18,7 @@ use App\Mail\SendVerifyMail;  // 自定義的寄信樣式、內容
 
 class UserController extends Controller
 {
+    // 註冊會員處理函數
     public function register(Request $request)
     {
         try {
@@ -105,10 +106,15 @@ class UserController extends Controller
 
         $user = User::where('username', $validatedData['username'])->first();
 
-        if ($user && Hash::check($validatedData['password'], $user->password)) {
+        if ($user && Hash::check($validatedData['password'], $user->password) && !$user->verified) {
             // 返回響應
             return response()->json($user);
         } else {
+            // 如果驗證信未點擊過驗證按鈕
+            if (!$user->verified){  
+                // 未驗證，返回錯誤訊息
+                return response()->json(['error' => '請先至信箱點擊認證信驗證按鈕進行驗證(有時可能在垃圾郵件中)'], 401);
+            }
             // 登入失敗，返回錯誤訊息
             return response()->json(['error' => '用戶名或密碼錯誤'], 401);
         }
