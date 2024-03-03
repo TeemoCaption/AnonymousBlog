@@ -3,7 +3,7 @@
         <v-row class="fill-height" align="center" justify="center">
             <v-col cols="12" sm="8" md="4">
                 <!-- 在v-card上方添加的進度條 -->
-                <v-progress-linear v-if="loading" :indeterminate="true" color="white"></v-progress-linear>
+                <v-progress-linear v-if="loading" :indeterminate="true" color="red"></v-progress-linear>
 
                 <v-card class="elevation-12 register-card">
                     <v-toolbar color="primary" dark>

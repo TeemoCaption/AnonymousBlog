@@ -3,7 +3,7 @@
         <v-row class="fill-height" align="center" justify="center">
             <v-col cols="12" sm="8" md="4">
                 <!-- 在v-card上方添加的進度條 -->
-                <v-progress-linear v-if="loading" :indeterminate="true" color="white"></v-progress-linear>
+                <v-progress-linear v-if="loading" :indeterminate="true" color="red"></v-progress-linear>
 
                 <v-card class="elevation-12 login-card">
                     <v-toolbar color="primary" dark>
@@ -38,6 +38,10 @@
             </v-col>
         </v-row>
     </v-container>
+    <v-snackbar v-model="snackbar" :timeout="3000" bottom right>
+        {{ snackbarText }}
+        <v-btn color="red" text @click="snackbar = false">關閉</v-btn>
+    </v-snackbar>
 </template>
 
 <script>
@@ -53,8 +57,11 @@ export default {
 
             isUserVerified: true, // 預設假設用戶已驗證
 
-            loginError: false, // 控制登入錯誤提示的顯示
+            loginError: false, // 控制登入錯誤提示的顯示狀態
             errorMessage: '', // 錯誤訊息內容
+
+            snackbar: false, // 控制重發驗證信提示框的顯示狀態
+            snackbarText: '', // 提示框中顯示的文本
         }
     },
     mounted() {
@@ -111,6 +118,7 @@ export default {
                                 // 檢查錯誤訊息是否指示用戶未驗證
                                 if (this.errorMessage.includes('請先至信箱點擊認證信驗證按鈕進行驗證(有時可能在垃圾郵件中)')) {
                                     this.isUserVerified = false; // 設置用戶未驗證
+
                                 }
                             } else if (xhr.responseJSON.message) {
                                 // 如果存在 'message' 字段，使用該字段作為錯誤訊息
@@ -130,8 +138,46 @@ export default {
                 this.loginError = true; // 顯示錯誤提示
             }
         },
-        resendVerificationEmail() {  // 發送重寄驗證郵件
-            console.log('重寄驗證郵件功能待實現');
+        resendVerificationEmail() {
+            // 從 meta 標籤取得 CSRF 令牌
+            const tokenElement = document.querySelector('meta[name="csrf-token"]');
+
+            if (tokenElement) {
+                const token = tokenElement.getAttribute('content');
+                // 使用 jQuery 發送 AJAX 請求
+                $.ajax({
+                    url: '/resendverification', // 請求的 URL
+                    method: 'POST', // 請求方法
+                    contentType: 'application/json', // 傳送訊息至伺服器時內容編碼類型
+                    headers: {
+                        'X-CSRF-TOKEN': token, // 在請求頭中設定 CSRF 令牌
+                    },
+                    data: JSON.stringify({ // 將資料轉換為 JSON 字串
+                        username: this.username,
+                        password: this.password,
+                    }),
+                    contentType: 'application/json', // 設置請求的內容類型
+                    success: (data) => { // 請求成功後的回呼函數
+                        this.snackbarText = '驗證信已重發，請檢查您的郵箱。';
+                        this.snackbar = true; // 顯示提示
+
+                        // 設置 5 秒的延時
+                        setTimeout(() => {
+                            window.location.reload(); // 重新載入網頁
+                        }, 5000); // 5000 毫秒 = 5 秒
+                    },
+                    error: (xhr) => {
+                        if (xhr.responseJSON && xhr.responseJSON.error) {
+                            this.snackbarText = xhr.responseJSON.error; // 從後端響應中獲取錯誤訊息
+                        }
+                        this.snackbar = true; // 顯示錯誤提示
+                    }
+                });
+            }
+            else {
+                this.errorMessage = 'CSRF token meta tag not found.'; // 設定錯誤訊息
+                this.loginError = true; // 顯示錯誤提示
+            }
         },
         resetPassword() {
             // 設定要跳轉到的忘記密碼頁面網址

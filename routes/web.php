@@ -39,6 +39,9 @@ Route::get('/verifysuccess', function () {
     return view('verifysuccess');
 })->name('verifysuccess');
 
+// 重發驗證信
+Route::post('/resendverification', [UserController::class, 'resendverification']);
+
 // 禁止訪問頁
 Route::get('/noaccess', function () {
     return view('noaccess');

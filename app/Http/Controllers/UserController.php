@@ -90,10 +90,15 @@ class UserController extends Controller
 
         // 檢查使用者是否存在、雜湊值是否匹配，以及驗證 token 是否匹配
         if ($user && sha1($user->email) == $hash && $user->verification_token == $token) {
-            // 更新 verified 欄位為 true 並清除驗證 token
-            $user->verified = true;
-            $user->verification_token = null;
-            $user->save();
+            if ($user->verified == true) {
+                return redirect('/verified');
+            } else {
+                // 更新 verified 欄位為 true
+                $user->verified = true;
+                //$user->verification_token = null;
+                $user->save();
+            }
+
 
             return redirect()->route('verifysuccess');
         }
@@ -120,5 +125,26 @@ class UserController extends Controller
 
         // 如果使用者不存在或密碼錯誤
         return response()->json(['error' => '用戶不存在或密碼錯誤'], 401);
+    }
+
+    // 重發驗證信
+    public function resendverification(Request $request)
+    {
+        $username = $request->input('username');
+        $password = $request->input('password');
+
+        // 根據用戶名查找用戶
+        $user = User::where('username', $username)->first();
+
+        // 檢查用戶是否存在以及密碼是否正確
+        if (!$user || !Hash::check($request->input('password'), $user->password)) {
+            // 用戶不存在或密碼不正確
+            return response()->json(['error' => '用戶名或密碼不正確。'], 401);
+        } else {
+            // 傳送認證信
+            Mail::to($user->email)->send(new SendVerifyMail($user, $user->verification_token));
+
+            return response()->json(['success' => '驗證信已重發']);
+        }
     }
 }
