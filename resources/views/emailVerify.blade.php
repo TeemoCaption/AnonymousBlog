@@ -49,7 +49,8 @@
     <div class="container">
         <h1>歡迎加入我們！</h1>
         <p>請點擊下方按鈕以完成您的電子郵件認證：</p>
-        <a href="{{ route('verification.verify', ['id' => $id, 'hash' => $hash]) }}" class="verify-button">認證電子郵件</a>
+        <!-- 使用簽名的驗證連結 -->
+        <a href="{{ $verificationUrl }}" class="verify-button">認證電子郵件</a>
     </div>
 
 </body>

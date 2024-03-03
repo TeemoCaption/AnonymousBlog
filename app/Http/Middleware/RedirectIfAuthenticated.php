@@ -21,7 +21,14 @@ class RedirectIfAuthenticated
 
         foreach ($guards as $guard) {
             if (Auth::guard($guard)->check()) {
-                return redirect(RouteServiceProvider::HOME);
+                // 獲取當前認證的用戶
+                $user = Auth::guard($guard)->user();
+
+                // 檢查用戶是否已經驗證
+                if ($user->verified) {
+                    // 如果用戶已經驗證，則重定向到首頁
+                    return redirect('/');
+                }
             }
         }
 

@@ -8,8 +8,11 @@ use App\Models\User;  // 會員資料表
 // 驗證類別
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Auth;
 
 use Illuminate\Support\Facades\Hash;  // 導入加密用的類別
+use Illuminate\Support\Str;
+
 
 // 導入寄信需要的類別
 use Illuminate\Support\Facades\Mail;
@@ -37,16 +40,20 @@ class UserController extends Controller
 
             $validatedData = $validator->validated();
 
+            // 產生一個新的、唯一的驗證 token
+            $verificationToken = Str::random(60);
+
             // 儲存使用者數據
             $user = User::create([
                 'email' => $validatedData['email'],
                 'username' => $validatedData['username'],
                 'password' => Hash::make($validatedData['password']),
                 'verified' => false, // 預設未驗證
+                'verification_token' => $verificationToken, // 儲存驗證 token
             ]);
 
             // 傳送認證信
-            Mail::to($user->email)->send(new SendVerifyMail($user));
+            Mail::to($user->email)->send(new SendVerifyMail($user, $verificationToken));
 
             // 回傳回應
             return response()->json($user);
@@ -75,51 +82,43 @@ class UserController extends Controller
         }
     }
 
-    // 點擊驗證信按鈕後的驗證動作
-    public function verifyEmail($id, $hash)
+    // 點擊驗證按鈕後的處理
+    public function verifyEmail(Request $request, $id, $hash, $token)
     {
-        // 尋找用戶
+        //dd($token);
         $user = User::find($id);
 
-        // 檢查使用者是否存在以及雜湊值是否匹配(即驗證成功)
-        if ($user && sha1($user->email) == $hash) {
-            // 更新 verified 欄位為 true
+        // 檢查使用者是否存在、雜湊值是否匹配，以及驗證 token 是否匹配
+        if ($user && sha1($user->email) == $hash && $user->verification_token == $token) {
+            // 更新 verified 欄位為 true 並清除驗證 token
             $user->verified = true;
+            $user->verification_token = null;
             $user->save();
 
-            // 重定向到顯示驗證成功提示訊息頁面
             return redirect()->route('verifysuccess');
         }
 
-        // 如果驗證失敗，顯示錯誤訊息或重定向
-        return redirect('/register')->with('error', '驗證失敗。');
+        return redirect('/verified');
     }
 
     // 會員登入驗證
     public function loginVerify(Request $request)
     {
-        // 驗證請求數據
-        $validatedData = $request->validate([
-            'username' => 'required',
-            'password' => 'required',
-        ]);
+        $credentials = $request->only('username', 'password');
 
-        $user = User::where('username', $validatedData['username'])->first();
-
-        if ($user) {
-            if (Hash::check($validatedData['password'], $user->password)) {
-                if ($user->verified != 1) {
-                    // 如果使用者存在，密碼正確，但未驗證
-                    return response()->json(['error' => '請先至信箱點擊認證信驗證按鈕進行驗證(有時可能在垃圾郵件中)'], 401);
-                }
-                // 如果使用者存在，密碼正確，並且已驗證
-                return response()->json($user);
+        // 嘗試將用戶驗證為應用程式
+        if (Auth::attempt($credentials)) {
+            $user = Auth::user();
+            if ($user->verified != 1) {
+                // 如果使用者存在，密碼正確，但未驗證
+                return response()->json(['error' => '請先至信箱點擊認證信驗證按鈕進行驗證(有時可能在垃圾郵件中)'], 401);
             }
-            // 如果使用者存在，但密碼不正確
-            return response()->json(['error' => '密碼錯誤'], 401);
+
+            // 如果使用者存在，密碼正確，並且已驗證，返回使用者資訊
+            return response()->json($user);
         }
 
-        // 如果使用者不存在
-        return response()->json(['error' => '用戶不存在'], 404);
+        // 如果使用者不存在或密碼錯誤
+        return response()->json(['error' => '用戶不存在或密碼錯誤'], 401);
     }
 }

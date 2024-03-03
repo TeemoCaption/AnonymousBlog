@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\Auth;
 
-class RedirectIfNotAuthenticated
+class RedirectIfNotAuthenticated  // 使用者未登錄重定向中間件
 {
     /**
      * Handle an incoming request.

@@ -26,5 +26,10 @@ class Handler extends ExceptionHandler
         $this->reportable(function (Throwable $e) {
             //
         });
+
+        $this->renderable(function (\Illuminate\Routing\Exceptions\InvalidSignatureException $e, $request) {
+            // 當捕獲到 InvalidSignatureException 時，重定向到自訂路由
+            return redirect('/failverifiedurl');
+        });
     }
 }

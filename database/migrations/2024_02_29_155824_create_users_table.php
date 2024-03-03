@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('username'); // 用戶名
             $table->string('password'); // 密碼
             $table->boolean('verified')->default(false); // 驗證狀態，默認為false
+            $table->string('verification_token')->nullable();  // 驗證token(可為null)
             $table->timestamps(); // 自動創建的created_at和updated_at時間戳
         });
     }

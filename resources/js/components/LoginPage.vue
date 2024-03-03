@@ -29,6 +29,8 @@
                     <v-divider></v-divider>
                     <v-card-actions>
                         <v-spacer></v-spacer>
+                        <!-- 條件渲染重寄驗證信的按鈕 -->
+                        <v-btn v-if="!isUserVerified" @click="resendVerificationEmail">沒收到驗證信?重寄驗證信</v-btn>
                         <v-btn @click="goToMemberPage">還沒有會員?</v-btn>
                         <v-btn @click="resetPassword">忘記密碼?</v-btn>
                     </v-card-actions>
@@ -48,6 +50,8 @@ export default {
 
             username: '',
             password: '',
+
+            isUserVerified: true, // 預設假設用戶已驗證
 
             loginError: false, // 控制登入錯誤提示的顯示
             errorMessage: '', // 錯誤訊息內容
@@ -103,6 +107,11 @@ export default {
                             if (xhr.responseJSON.error) {
                                 // 如果存在 'error' 字段，使用該字段作為錯誤訊息
                                 this.errorMessage = xhr.responseJSON.error;
+
+                                // 檢查錯誤訊息是否指示用戶未驗證
+                                if (this.errorMessage.includes('請先至信箱點擊認證信驗證按鈕進行驗證(有時可能在垃圾郵件中)')) {
+                                    this.isUserVerified = false; // 設置用戶未驗證
+                                }
                             } else if (xhr.responseJSON.message) {
                                 // 如果存在 'message' 字段，使用該字段作為錯誤訊息
                                 this.errorMessage = xhr.responseJSON.message;
@@ -120,6 +129,9 @@ export default {
                 this.errorMessage = 'CSRF token meta tag not found.'; // 設定錯誤訊息
                 this.loginError = true; // 顯示錯誤提示
             }
+        },
+        resendVerificationEmail() {  // 發送重寄驗證郵件
+            console.log('重寄驗證郵件功能待實現');
         },
         resetPassword() {
             // 設定要跳轉到的忘記密碼頁面網址

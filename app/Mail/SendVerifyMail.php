@@ -9,6 +9,8 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
+use Illuminate\Support\Facades\URL;
+
 use App\Models\User;
 
 class SendVerifyMail extends Mailable
@@ -19,10 +21,12 @@ class SendVerifyMail extends Mailable
      * Create a new message instance.
      */
     public $user;
+    public $verificationToken; // 認證信驗證Token
 
-    public function __construct(User $user)
+    public function __construct(User $user, $verificationToken)
     {
         $this->user = $user;
+        $this->verificationToken = $verificationToken;
     }
 
     /**
@@ -38,15 +42,22 @@ class SendVerifyMail extends Mailable
     /**
      * Get the message content definition.
      */
-    public function content(): Content  // 信件內容
+
+    public function content(): Content // 信件內容
     {
+        // 產生帶有驗證 token 的驗證連結
+        $verificationUrl = route('verification.verify', [
+            'id' => $this->user->id,
+            'hash' => sha1($this->user->email),
+            'token' => $this->user->verification_token // 使用使用者的驗證 token
+        ]);
+
         return new Content(
             view: 'emailVerify',
-            with: [  // 將數據傳遞給視圖
+            with: [ // 將資料傳遞給視圖
                 'user' => $this->user,
-                'id' => $this->user->id, // 確保這裡傳遞了 id
-                'hash' => sha1($this->user->email), // 確保這裡傳遞了 hash
-            ], 
+                'verificationUrl' => $verificationUrl, // 傳遞帶有驗證 token 的驗證鏈接
+            ],
         );
     }
 

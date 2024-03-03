@@ -27,6 +27,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'username',
         'password',
         'verified',
+        'verification_token',
     ];
 
     /**
@@ -34,7 +35,10 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function sendEmailVerificationNotification()
     {
-        Mail::to($this->email)->send(new SendVerifyMail($this));
+        // 取得目前使用者的驗證 token
+        $verificationToken = $this->verification_token;
+        // 向 SendVerifyMail 建構函式傳遞目前使用者實例和驗證 token
+        Mail::to($this->email)->send(new SendVerifyMail($this, $verificationToken));
     }
 
     /**
