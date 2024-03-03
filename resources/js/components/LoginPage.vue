@@ -95,9 +95,25 @@ export default {
                         // 重定向到首頁
                         window.location.href = '/';
                     },
-                    error: (xhr, status, error) => { // 請求失敗後的回呼函數
+                    error: (xhr, status, error) => {
                         this.loginError = true; // 登入失敗，設定 loginError 為 true 以顯示錯誤訊息
-                        this.errorMessage = '登入失敗，請檢查輸入或稍後重試'; // 設定錯誤訊息
+
+                        // 檢查後端是否提供了具體的錯誤訊息
+                        if (xhr.responseJSON) {
+                            if (xhr.responseJSON.error) {
+                                // 如果存在 'error' 字段，使用該字段作為錯誤訊息
+                                this.errorMessage = xhr.responseJSON.error;
+                            } else if (xhr.responseJSON.message) {
+                                // 如果存在 'message' 字段，使用該字段作為錯誤訊息
+                                this.errorMessage = xhr.responseJSON.message;
+                            } else {
+                                // 如果後端回應中沒有 'error' 或 'message' 字段，使用預設錯誤訊息
+                                this.errorMessage = '登入失敗，請檢查輸入或稍後重試';
+                            }
+                        } else {
+                            // 如果 xhr.responseJSON 不存在，使用預設錯誤訊息
+                            this.errorMessage = '登入失敗，請檢查輸入或稍後重試';
+                        }
                     }
                 });
             } else {
