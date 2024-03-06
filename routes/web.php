@@ -42,6 +42,11 @@ Route::get('/verifysuccess', function () {
 // 重發驗證信
 Route::post('/resendverification', [UserController::class, 'resendverification']);
 
+// 驗證信失效
+Route::get('/failverifiedurl', function () {
+    return view('failverifiedurl');
+});
+
 // 禁止訪問頁
 Route::get('/noaccess', function () {
     return view('noaccess');

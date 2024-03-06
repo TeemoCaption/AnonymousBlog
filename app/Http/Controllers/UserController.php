@@ -103,7 +103,7 @@ class UserController extends Controller
             return redirect()->route('verifysuccess');
         }
 
-        return redirect('/verified');
+        return redirect('/failverifiedurl');
     }
 
     // 會員登入驗證
